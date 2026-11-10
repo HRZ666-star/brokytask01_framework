@@ -1,0 +1,28 @@
+# build
+build/
+cmake-build-*/
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.su
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.uvguix.*
+*.uvoptx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs / data
+*.log
+logs/
+data/raw/
