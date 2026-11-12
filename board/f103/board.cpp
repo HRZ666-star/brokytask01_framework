@@ -1,9 +1,13 @@
 #include "board.h"
+#include "board_uart.h"
+#include "bsp/stm32/uart/hal_uart.h"
 
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef  htim2;
 I2C_HandleTypeDef  hi2c1;
 CAN_HandleTypeDef  hcan1;
+
+static bsp::HalUart g_uart{huart1};
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -14,7 +18,13 @@ extern "C" void board_init(void) {
     SystemClock_Config();
     MX_GPIO_Init();
     MX_USART1_UART_Init();
+
+    if (g_uart.init({115200U, bsp::UartMode::Blocking}) != common::Error::Ok) {
+        Error_Handler();
+    }
 }
+
+bsp::IUart& board_uart() { return g_uart; }
 
 static void SystemClock_Config(void) {
     RCC_OscInitTypeDef osc = {};
@@ -71,23 +81,21 @@ static void MX_USART1_UART_Init(void) {
     gpio.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &gpio);
 
-    huart1.Instance          = USART1;
-    huart1.Init.BaudRate     = 115200;
-    huart1.Init.WordLength   = UART_WORDLENGTH_8B;
-    huart1.Init.StopBits     = UART_STOPBITS_1;
-    huart1.Init.Parity       = UART_PARITY_NONE;
-    huart1.Init.Mode         = UART_MODE_TX_RX;
-    huart1.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
-    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-    if (HAL_UART_Init(&huart1) != HAL_OK) {
-        Error_Handler();
-    }
+    huart1.Instance = USART1;
+
+    HAL_NVIC_SetPriority(USART1_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 extern "C" int _write(int, char* ptr, int len) {
-    HAL_UART_Transmit(&huart1, reinterpret_cast<uint8_t*>(ptr),
-                      static_cast<uint16_t>(len), 100);
-    return len;
+    if (len <= 0) {
+        return 0;
+    }
+    const common::Error error = g_uart.write(
+        {reinterpret_cast<const std::uint8_t*>(ptr),
+         static_cast<std::size_t>(len)},
+        100U);
+    return error == common::Error::Ok ? len : -1;
 }
 
 extern "C" void board_led_write(uint8_t on) {

@@ -33,9 +33,18 @@ public:
     [[nodiscard]] Error stopReceive() override;
     [[nodiscard]] UartMode mode() const noexcept override;
 
+    /* Internal hook used by HAL_UART_RxCpltCallback(). */
+    static void on_rx_complete(UART_HandleTypeDef* handle);
+
 private:
     UART_HandleTypeDef& handle_;
     UartMode mode_{UartMode::Blocking};
+    UartRxCallback callback_{nullptr};
+    void* callback_context_{nullptr};
+    std::uint8_t rx_byte_{0};
+    bool initialized_{false};
+    bool receiving_{false};
+    static HalUart* active_;
 };
 
 }  // namespace bsp
