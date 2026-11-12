@@ -1,7 +1,28 @@
 #include "board.h"
 
+#ifdef USE_FREERTOS
+/*
+ * FreeRTOS Cortex-M3 port entry points.  The port owns SVC, PendSV and the
+ * SysTick *counter*, but the vector table still points at these names.
+ */
+extern "C" void vPortSVCHandler(void);
+extern "C" void xPortPendSVHandler(void);
+extern "C" void xPortSysTickHandler(void);
+
+extern "C" void SVC_Handler(void) {
+    vPortSVCHandler();
+}
+
+extern "C" void PendSV_Handler(void) {
+    xPortPendSVHandler();
+}
+#endif
+
 extern "C" void SysTick_Handler(void) {
     HAL_IncTick();
+#ifdef USE_FREERTOS
+    xPortSysTickHandler();
+#endif
 }
 
 extern "C" void USART1_IRQHandler(void) {

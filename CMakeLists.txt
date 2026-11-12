@@ -10,6 +10,19 @@ if(NOT BOARD)
   set(BOARD "f103" CACHE STRING "Target board: f103 | f407")
 endif()
 
+# Application entry point.  The default is the normal demo; the smoke test is
+# a separate image so a failed scheduler bring-up cannot disturb the UART demo.
+set(APP "main" CACHE STRING "Application entry: main | freertos_smoke")
+if(APP STREQUAL "freertos_smoke")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/freertos_smoke.cpp)
+  set(APP_DEFINITIONS USE_FREERTOS)
+elseif(APP STREQUAL "main")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/main.cpp)
+  set(APP_DEFINITIONS)
+else()
+  message(FATAL_ERROR "Unknown APP=${APP} (expected main or freertos_smoke)")
+endif()
+
 if(BOARD STREQUAL "f103")
   set(CPU_FLAGS -mcpu=cortex-m3 -mthumb)
   set(BOARD_DIR ${CMAKE_SOURCE_DIR}/board/f103)
@@ -40,11 +53,14 @@ add_executable(firmware
   ${BOARD_DIR}/system_stm32f1xx.c
   ${BOARD_DIR}/board.cpp
   ${BOARD_DIR}/stm32f1xx_it.cpp
-  ${CMAKE_SOURCE_DIR}/app/main.cpp
+  ${APP_SOURCE}
 )
 
 target_include_directories(firmware PRIVATE ${BOARD_DIR}/inc)
-target_link_libraries(firmware PRIVATE ${HAL_TARGET})
+target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos)
+if(APP_DEFINITIONS)
+  target_compile_definitions(firmware PRIVATE ${APP_DEFINITIONS})
+endif()
 set_target_properties(firmware PROPERTIES SUFFIX ".elf")
 
 add_custom_command(TARGET firmware POST_BUILD
