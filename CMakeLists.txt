@@ -47,6 +47,15 @@ add_link_options(
 )
 
 add_subdirectory(third_party)
+add_subdirectory(common)
+add_subdirectory(bsp/interface)
+add_subdirectory(bsp/stm32)
+
+if(BOARD STREQUAL "f103")
+  target_compile_definitions(bsp_stm32 PUBLIC STM32F1)
+elseif(BOARD STREQUAL "f407")
+  target_compile_definitions(bsp_stm32 PUBLIC STM32F4)
+endif()
 
 add_executable(firmware
   ${BOARD_DIR}/startup_stm32f103xb.s
@@ -57,7 +66,7 @@ add_executable(firmware
 )
 
 target_include_directories(firmware PRIVATE ${BOARD_DIR}/inc)
-target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos)
+target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos bsp_stm32 common)
 if(APP_DEFINITIONS)
   target_compile_definitions(firmware PRIVATE ${APP_DEFINITIONS})
 endif()
@@ -67,4 +76,11 @@ add_custom_command(TARGET firmware POST_BUILD
   COMMAND ${CMAKE_OBJCOPY} -O ihex   $<TARGET_FILE:firmware> ${CMAKE_BINARY_DIR}/firmware.hex
   COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:firmware> ${CMAKE_BINARY_DIR}/firmware.bin
   COMMAND ${CMAKE_SIZE} $<TARGET_FILE:firmware>
+)
+
+add_custom_target(check_layering
+  COMMAND powershell -NoProfile -ExecutionPolicy Bypass
+          -File ${CMAKE_SOURCE_DIR}/tools/check_layering.ps1
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Checking that app/modules do not include HAL headers"
 )
