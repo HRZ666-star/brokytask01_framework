@@ -1,6 +1,9 @@
 #include "board.h"
 
 #ifdef USE_FREERTOS
+#include "FreeRTOS.h"
+#include "task.h"
+
 /*
  * FreeRTOS Cortex-M3 port entry points.  The port owns SVC, PendSV and the
  * SysTick *counter*, but the vector table still points at these names.
@@ -21,7 +24,15 @@ extern "C" void PendSV_Handler(void) {
 extern "C" void SysTick_Handler(void) {
     HAL_IncTick();
 #ifdef USE_FREERTOS
-    xPortSysTickHandler();
+    /*
+     * HAL_Init() enables SysTick before vTaskStartScheduler() has built the
+     * FreeRTOS ready/delayed lists.  Calling xPortSysTickHandler() in that
+     * window dereferences a null pxCurrentTCB and HardFaults, so only forward
+     * the tick once the scheduler is actually running.
+     */
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+        xPortSysTickHandler();
+    }
 #endif
 }
 

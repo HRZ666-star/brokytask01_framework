@@ -103,3 +103,36 @@ cmake --build build
 | 链接报 `undefined reference to xPortSysTickHandler` | `third_party/freertos/portable/GCC/ARM_CM3/port.c` 是否加入 `freertos` target |
 | 一启动就进 `HardFault_Handler` | 先看 `configPRIO_BITS`、NVIC 优先级分组、`configMAX_SYSCALL_INTERRUPT_PRIORITY` |
 | `xTaskCreate` 返回失败 | `configTOTAL_HEAP_SIZE` 是否够（当前 10 KB），栈是否过大 |
+
+## 8. 本次实测踩到的两个坑
+
+### 8.1 启动后停在 `main` 入口
+
+Ozone/J-Link 可能在 `main` 设了一个硬件断点（FPB_COMP0 = `0x080003A1`），所以下载后 PC 停在 `0x080003A0`，看起来像“程序没跑”。
+在 Ozone 里按 `F5`，或者在 J-Link Commander 里清掉 FPB：
+
+```text
+w4 0xE0002000, 0x00000003
+w4 0xE0002008, 0x00000000
+w4 0xE0002000, 0x00000001
+```
+
+### 8.2 启动早期 HardFault
+
+第一次实测时，`HAL_Init()` 已经打开 SysTick，而 `vTaskStartScheduler()` 还没初始化 FreeRTOS 的延时链表。
+第一个 tick 进入 `xPortSysTickHandler()` 后访问空的 `pxCurrentTCB`，直接 HardFault。
+
+修复分两层：
+
+1. `linker.ld` 的 `_estack` 改成 `0x20005000`（8 字节对齐；`0x20004FFF` 是错的）。
+2. `SysTick_Handler()` 只在 `xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED` 时转发 tick。
+
+修复后实测：
+
+```text
+freertos smoke: boot, sysclk=72000000
+freertos smoke: starting scheduler
+```
+
+并且 `GPIOC->ODR` 的 bit 13 在 700 ms 内从 `0x2000` 变为 `0x0000`，确认 LED 在翻转。
+

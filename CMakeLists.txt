@@ -33,7 +33,7 @@ else()
   message(FATAL_ERROR "Unknown BOARD=${BOARD}")
 endif()
 
-add_compile_options(${CPU_FLAGS} -Os -ffunction-sections -fdata-sections -Wall -Wextra)
+add_compile_options(${CPU_FLAGS} -Os -g3 -ffunction-sections -fdata-sections -Wall -Wextra)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 
