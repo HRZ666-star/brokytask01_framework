@@ -18,6 +18,7 @@ extern CAN_HandleTypeDef  hcan1;
 void board_init(void);
 void board_led_write(uint8_t on);
 void board_led_toggle(void);
+uint32_t board_micros(void);
 void Error_Handler(void);
 
 #ifdef __cplusplus

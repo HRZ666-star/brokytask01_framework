@@ -16,6 +16,7 @@ static bsp::HalCan  g_can{hcan1};
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM2_Init(void);
 static void MX_CAN_Init(void);
 
 extern "C" void board_init(void) {
@@ -23,6 +24,7 @@ extern "C" void board_init(void) {
     SystemClock_Config();
     MX_GPIO_Init();
     MX_USART1_UART_Init();
+    MX_TIM2_Init();
     MX_CAN_Init();
 
     if (g_uart.init({115200U, bsp::UartMode::Blocking}) != common::Error::Ok) {
@@ -92,6 +94,32 @@ static void MX_USART1_UART_Init(void) {
 
     HAL_NVIC_SetPriority(USART1_IRQn, 6, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
+}
+
+/*
+ * Free-running 1 MHz time base for period/jitter measurements.
+ * APB1 is 36 MHz and the timer clock is doubled to 72 MHz, so /72 gives 1 us.
+ */
+static void MX_TIM2_Init(void) {
+    __HAL_RCC_TIM2_CLK_ENABLE();
+
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 71U;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    /* 16-bit wrap window (65.536 ms); the task subtracts 16-bit deltas. */
+    htim2.Init.Period = 0xFFFFU;
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_Base_Start(&htim2) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
+uint32_t board_micros(void) {
+    return __HAL_TIM_GET_COUNTER(&htim2);
 }
 
 static void MX_CAN_Init(void) {
