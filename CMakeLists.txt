@@ -12,7 +12,7 @@ endif()
 
 # Application entry point.  The default is the normal demo; the smoke test is
 # a separate image so a failed scheduler bring-up cannot disturb the UART demo.
-set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test | can_test")
+set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test | can_test | f407_test")
 if(APP STREQUAL "freertos_smoke")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/freertos_smoke.cpp)
   set(APP_DEFINITIONS USE_FREERTOS)
@@ -28,18 +28,41 @@ elseif(APP STREQUAL "log_test")
 elseif(APP STREQUAL "can_test")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/can_test.cpp)
   set(APP_DEFINITIONS)
+elseif(APP STREQUAL "f407_test")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/f407_test.cpp)
+  set(APP_DEFINITIONS)
 else()
-  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test, log_test or can_test)")
+  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test, log_test, can_test or f407_test)")
 endif()
 
 if(BOARD STREQUAL "f103")
   set(CPU_FLAGS -mcpu=cortex-m3 -mthumb)
   set(BOARD_DIR ${CMAKE_SOURCE_DIR}/board/f103)
   set(HAL_TARGET stm32f1_hal)
+  set(BOARD_SOURCES
+    ${BOARD_DIR}/startup_stm32f103xb.s
+    ${BOARD_DIR}/system_stm32f1xx.c
+    ${BOARD_DIR}/board.cpp
+    ${BOARD_DIR}/stm32f1xx_it.cpp
+  )
+  set(BOARD_LINK_LIBS ${HAL_TARGET} freertos bsp_stm32 common modules)
 elseif(BOARD STREQUAL "f407")
-  message(FATAL_ERROR "F407 board layer is not added yet")
+  set(CPU_FLAGS -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
+  set(BOARD_DIR ${CMAKE_SOURCE_DIR}/board/f407)
+  set(HAL_TARGET stm32f4_hal)
+  set(BOARD_SOURCES
+    ${BOARD_DIR}/startup_stm32f407xx.s
+    ${BOARD_DIR}/system_stm32f4xx.c
+    ${BOARD_DIR}/board.cpp
+    ${BOARD_DIR}/stm32f4xx_it.cpp
+  )
+  set(BOARD_LINK_LIBS ${HAL_TARGET} bsp_stm32 common)
 else()
   message(FATAL_ERROR "Unknown BOARD=${BOARD}")
+endif()
+
+if(APP STREQUAL "f407_test" AND NOT BOARD STREQUAL "f407")
+  message(FATAL_ERROR "APP=f407_test requires BOARD=f407")
 endif()
 
 add_compile_options(${CPU_FLAGS} -Os -g3 -ffunction-sections -fdata-sections -Wall -Wextra)
@@ -59,7 +82,9 @@ add_subdirectory(third_party)
 add_subdirectory(common)
 add_subdirectory(bsp/interface)
 add_subdirectory(bsp/stm32)
-add_subdirectory(modules)
+if(BOARD STREQUAL "f103")
+  add_subdirectory(modules)
+endif()
 
 if(BOARD STREQUAL "f103")
   target_compile_definitions(bsp_stm32 PUBLIC STM32F1)
@@ -68,15 +93,12 @@ elseif(BOARD STREQUAL "f407")
 endif()
 
 add_executable(firmware
-  ${BOARD_DIR}/startup_stm32f103xb.s
-  ${BOARD_DIR}/system_stm32f1xx.c
-  ${BOARD_DIR}/board.cpp
-  ${BOARD_DIR}/stm32f1xx_it.cpp
+  ${BOARD_SOURCES}
   ${APP_SOURCE}
 )
 
 target_include_directories(firmware PRIVATE ${BOARD_DIR}/inc)
-target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos bsp_stm32 common modules)
+target_link_libraries(firmware PRIVATE ${BOARD_LINK_LIBS})
 if(APP_DEFINITIONS)
   target_compile_definitions(firmware PRIVATE ${APP_DEFINITIONS})
 endif()

@@ -1,2 +1,6 @@
-add_subdirectory(stm32f1)
-add_subdirectory(freertos)
+if(BOARD STREQUAL "f103")
+  add_subdirectory(stm32f1)
+  add_subdirectory(freertos)
+elseif(BOARD STREQUAL "f407")
+  add_subdirectory(stm32f4)
+endif()

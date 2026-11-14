@@ -1,28 +1,13 @@
 #pragma once
 
+#include "bsp/interface/span.h"
 #include "common/error/error.h"
 
-#include <cstddef>
 #include <cstdint>
 
 namespace bsp {
 
 using common::Error;
-
-/*
- * Non-owning view over a contiguous byte buffer.  The framework passes spans
- * instead of raw pointers so the length can never be forgotten at a boundary.
- */
-template <typename T>
-struct Span {
-    T* data = nullptr;
-    std::size_t size = 0;
-
-    [[nodiscard]] constexpr bool empty() const noexcept { return size == 0; }
-};
-
-using ByteSpan = Span<std::uint8_t>;
-using ConstByteSpan = Span<const std::uint8_t>;
 
 enum class UartMode : std::uint8_t {
     Blocking,
