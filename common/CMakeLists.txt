@@ -1,5 +1,6 @@
 add_library(common STATIC
     error/error.cpp
+    log/log.cpp
 )
 
 target_include_directories(common PUBLIC ${CMAKE_SOURCE_DIR})

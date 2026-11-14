@@ -12,7 +12,7 @@ endif()
 
 # Application entry point.  The default is the normal demo; the smoke test is
 # a separate image so a failed scheduler bring-up cannot disturb the UART demo.
-set(APP "main" CACHE STRING "Application entry: main | freertos_smoke")
+set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test")
 if(APP STREQUAL "freertos_smoke")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/freertos_smoke.cpp)
   set(APP_DEFINITIONS USE_FREERTOS)
@@ -22,8 +22,11 @@ elseif(APP STREQUAL "main")
 elseif(APP STREQUAL "uart_test")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/uart_test.cpp)
   set(APP_DEFINITIONS)
+elseif(APP STREQUAL "log_test")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/log_test.cpp)
+  set(APP_DEFINITIONS USE_FREERTOS)
 else()
-  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke or uart_test)")
+  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test or log_test)")
 endif()
 
 if(BOARD STREQUAL "f103")
@@ -53,6 +56,7 @@ add_subdirectory(third_party)
 add_subdirectory(common)
 add_subdirectory(bsp/interface)
 add_subdirectory(bsp/stm32)
+add_subdirectory(modules)
 
 if(BOARD STREQUAL "f103")
   target_compile_definitions(bsp_stm32 PUBLIC STM32F1)
@@ -69,7 +73,7 @@ add_executable(firmware
 )
 
 target_include_directories(firmware PRIVATE ${BOARD_DIR}/inc)
-target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos bsp_stm32 common)
+target_link_libraries(firmware PRIVATE ${HAL_TARGET} freertos bsp_stm32 common modules)
 if(APP_DEFINITIONS)
   target_compile_definitions(firmware PRIVATE ${APP_DEFINITIONS})
 endif()
