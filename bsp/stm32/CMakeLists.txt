@@ -1,6 +1,7 @@
 # STM32 adapter layer.  This is the only place allowed to include HAL headers.
 add_library(bsp_stm32 STATIC
     uart/hal_uart.cpp
+    can/hal_can.cpp
 )
 
 target_include_directories(bsp_stm32 PUBLIC ${CMAKE_SOURCE_DIR})

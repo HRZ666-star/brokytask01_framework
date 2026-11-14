@@ -12,7 +12,7 @@ endif()
 
 # Application entry point.  The default is the normal demo; the smoke test is
 # a separate image so a failed scheduler bring-up cannot disturb the UART demo.
-set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test")
+set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test | can_test")
 if(APP STREQUAL "freertos_smoke")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/freertos_smoke.cpp)
   set(APP_DEFINITIONS USE_FREERTOS)
@@ -25,8 +25,11 @@ elseif(APP STREQUAL "uart_test")
 elseif(APP STREQUAL "log_test")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/log_test.cpp)
   set(APP_DEFINITIONS USE_FREERTOS)
+elseif(APP STREQUAL "can_test")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/can_test.cpp)
+  set(APP_DEFINITIONS)
 else()
-  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test or log_test)")
+  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test, log_test or can_test)")
 endif()
 
 if(BOARD STREQUAL "f103")
