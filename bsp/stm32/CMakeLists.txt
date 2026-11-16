@@ -7,7 +7,9 @@ set(BSP_STM32_SOURCES
 # F407 board layer initialises those peripherals.
 if(BOARD STREQUAL "f103")
   list(APPEND BSP_STM32_SOURCES
+      i2c/hal_i2c.cpp
       can/hal_can.cpp
+      pwm/hal_pwm.cpp
   )
 endif()
 

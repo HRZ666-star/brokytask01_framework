@@ -12,7 +12,7 @@ endif()
 
 # Application entry point.  The default is the normal demo; the smoke test is
 # a separate image so a failed scheduler bring-up cannot disturb the UART demo.
-set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test | can_test | imu_task | f407_test")
+set(APP "main" CACHE STRING "Application entry: main | freertos_smoke | uart_test | log_test | can_test | imu_test | imu_task | control_task | servo_test | system | f407_test")
 if(APP STREQUAL "freertos_smoke")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/freertos_smoke.cpp)
   set(APP_DEFINITIONS USE_FREERTOS)
@@ -28,14 +28,41 @@ elseif(APP STREQUAL "log_test")
 elseif(APP STREQUAL "can_test")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/can_test.cpp)
   set(APP_DEFINITIONS)
+elseif(APP STREQUAL "imu_test")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/imu_test.cpp)
+  set(APP_DEFINITIONS)
 elseif(APP STREQUAL "imu_task")
-  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/imu_task.cpp)
+  set(APP_SOURCE
+    ${CMAKE_SOURCE_DIR}/app/imu_task.cpp
+    ${CMAKE_SOURCE_DIR}/app/imu_source.cpp
+  )
   set(APP_DEFINITIONS USE_FREERTOS)
+elseif(APP STREQUAL "control_task")
+  set(APP_SOURCE
+    ${CMAKE_SOURCE_DIR}/app/control_task.cpp
+    ${CMAKE_SOURCE_DIR}/app/imu_source.cpp
+    ${CMAKE_SOURCE_DIR}/app/control_loop.cpp
+    ${CMAKE_SOURCE_DIR}/app/comm_task.cpp
+  )
+  set(APP_DEFINITIONS USE_FREERTOS)
+elseif(APP STREQUAL "system")
+  set(APP_SOURCE
+    ${CMAKE_SOURCE_DIR}/app/system_task.cpp
+    ${CMAKE_SOURCE_DIR}/app/imu_source.cpp
+    ${CMAKE_SOURCE_DIR}/app/control_loop.cpp
+    ${CMAKE_SOURCE_DIR}/app/comm_task.cpp
+    ${CMAKE_SOURCE_DIR}/app/safety_task.cpp
+    ${CMAKE_SOURCE_DIR}/app/telemetry_task.cpp
+  )
+  set(APP_DEFINITIONS USE_FREERTOS)
+elseif(APP STREQUAL "servo_test")
+  set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/servo_test.cpp)
+  set(APP_DEFINITIONS)
 elseif(APP STREQUAL "f407_test")
   set(APP_SOURCE ${CMAKE_SOURCE_DIR}/app/f407_test.cpp)
   set(APP_DEFINITIONS)
 else()
-  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test, log_test, can_test, imu_task or f407_test)")
+  message(FATAL_ERROR "Unknown APP=${APP} (expected main, freertos_smoke, uart_test, log_test, can_test, imu_test, imu_task, control_task, servo_test, system or f407_test)")
 endif()
 
 if(BOARD STREQUAL "f103")

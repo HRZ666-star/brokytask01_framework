@@ -1,22 +1,31 @@
 #include "board.h"
 #include "board_can.h"
+#include "board_i2c.h"
+#include "board_pwm.h"
 #include "board_uart.h"
 #include "bsp/stm32/can/hal_can.h"
+#include "bsp/stm32/i2c/hal_i2c.h"
+#include "bsp/stm32/pwm/hal_pwm.h"
 #include "bsp/stm32/uart/hal_uart.h"
 #include "stm32f1xx_hal_gpio_ex.h"
 
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef  htim2;
+TIM_HandleTypeDef  htim3;
 I2C_HandleTypeDef  hi2c1;
 CAN_HandleTypeDef  hcan1;
 
 static bsp::HalUart g_uart{huart1};
 static bsp::HalCan  g_can{hcan1};
+static bsp::HalI2c  g_i2c{hi2c1};
+static bsp::HalPwm  g_pwm{htim3, TIM_CHANNEL_1};
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_I2C1_Init(void);
 static void MX_CAN_Init(void);
 
 extern "C" void board_init(void) {
@@ -25,6 +34,8 @@ extern "C" void board_init(void) {
     MX_GPIO_Init();
     MX_USART1_UART_Init();
     MX_TIM2_Init();
+    MX_TIM3_Init();
+    MX_I2C1_Init();
     MX_CAN_Init();
 
     if (g_uart.init({115200U, bsp::UartMode::Blocking}) != common::Error::Ok) {
@@ -33,7 +44,9 @@ extern "C" void board_init(void) {
 }
 
 bsp::IUart& board_uart() { return g_uart; }
+bsp::II2c& board_i2c() { return g_i2c; }
 bsp::ICan& board_can() { return g_can; }
+bsp::IPwm& board_pwm() { return g_pwm; }
 
 static void SystemClock_Config(void) {
     RCC_OscInitTypeDef osc = {};
@@ -120,6 +133,45 @@ static void MX_TIM2_Init(void) {
 
 uint32_t board_micros(void) {
     return __HAL_TIM_GET_COUNTER(&htim2);
+}
+
+/*
+ * GPIO/clock for the servo signal (PA6 / TIM3_CH1).  The PWM duration and
+ * channel configuration belong to HalPwm::init(), which owns the 1 us tick.
+ */
+static void MX_TIM3_Init(void) {
+    GPIO_InitTypeDef gpio = {};
+
+    __HAL_RCC_TIM3_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    gpio.Pin = GPIO_PIN_6;
+    gpio.Mode = GPIO_MODE_AF_PP;
+    gpio.Pull = GPIO_NOPULL;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &gpio);
+
+    htim3.Instance = TIM3;
+}
+
+static void MX_I2C1_Init(void) {
+    GPIO_InitTypeDef gpio = {};
+
+    __HAL_RCC_I2C1_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    gpio.Pin   = GPIO_PIN_6 | GPIO_PIN_7;   // SCL=PB6, SDA=PB7
+    gpio.Mode  = GPIO_MODE_AF_OD;
+    gpio.Pull  = GPIO_NOPULL;
+    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB, &gpio);
+
+    hi2c1.Instance = I2C1;
+
+    HAL_NVIC_SetPriority(I2C1_EV_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+    HAL_NVIC_SetPriority(I2C1_ER_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 static void MX_CAN_Init(void) {

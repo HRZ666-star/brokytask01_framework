@@ -2,6 +2,9 @@
 # Modules may use BSP interfaces and FreeRTOS, but must not include HAL headers.
 add_library(modules STATIC
     logger/logger.cpp
+    imu/mpu6050.cpp
+    protocol/frame_parser.cpp
+    servo/servo.cpp
 )
 
 target_include_directories(modules PUBLIC ${CMAKE_SOURCE_DIR})
