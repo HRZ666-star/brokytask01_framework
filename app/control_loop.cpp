@@ -171,6 +171,7 @@ void control_task(void* argument) {
             telemetry.imu_seq = snapshot.seq;
             telemetry.comm_rx = comm_rx_bytes();
             telemetry.comm_errors = comm_frame_errors();
+            telemetry.comm_crc_errors = comm_crc_errors();
             telemetry.comm_drops = comm_command_drops();
             telemetry.faults = static_cast<std::uint32_t>(faults);
             telemetry.pitch_mdeg = snapshot.pitch_mdeg;

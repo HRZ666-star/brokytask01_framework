@@ -25,13 +25,13 @@ void FrameParser::reset() noexcept {
     crc_ = 0U;
 }
 
-bool FrameParser::feed(std::uint8_t byte, Frame& out) noexcept {
+common::Error FrameParser::feed(std::uint8_t byte, Frame& out) noexcept {
     switch (state_) {
         case State::WaitA:
             if (byte == 0xAAU) {
                 state_ = State::Wait55;
             }
-            return false;
+            return common::Error::Empty;
 
         case State::Wait55:
             if (byte == 0x55U) {
@@ -39,24 +39,24 @@ bool FrameParser::feed(std::uint8_t byte, Frame& out) noexcept {
             } else if (byte != 0xAAU) {
                 state_ = State::WaitA;
             }
-            return false;
+            return common::Error::Empty;
 
         case State::Length:
             if (byte > kMaxPayload) {
                 reset();
-                return false;
+                return common::Error::InvalidArgument;
             }
             length_ = byte;
             index_ = 0U;
             crc_ = crc8_update(0U, byte);
             state_ = (byte == 0U) ? State::Crc : State::Command;
-            return false;
+            return common::Error::Empty;
 
         case State::Command:
             command_ = byte;
             crc_ = crc8_update(crc_, byte);
             state_ = (length_ == 0U) ? State::Crc : State::Payload;
-            return false;
+            return common::Error::Empty;
 
         case State::Payload:
             payload_[index_++] = byte;
@@ -64,7 +64,7 @@ bool FrameParser::feed(std::uint8_t byte, Frame& out) noexcept {
             if (index_ >= length_) {
                 state_ = State::Crc;
             }
-            return false;
+            return common::Error::Empty;
 
         case State::Crc:
             if (byte == crc_) {
@@ -72,14 +72,14 @@ bool FrameParser::feed(std::uint8_t byte, Frame& out) noexcept {
                 out.length = length_;
                 std::memcpy(out.payload, payload_, length_);
                 reset();
-                return true;
+                return common::Error::Ok;
             }
             reset();
-            return false;
+            return common::Error::Checksum;
     }
 
     reset();
-    return false;
+    return common::Error::Empty;
 }
 
 }  // namespace modules

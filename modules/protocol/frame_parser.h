@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/error/error.h"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -27,11 +29,17 @@ public:
     static constexpr std::size_t kMaxPayload = 32U;
 
     /*
-     * Feed one byte.  Returns true when a complete, CRC-valid frame has been
-     * produced in `out`.  Invalid frames are discarded and the parser
+     * Feed one byte.
+     *
+     *   Ok              complete, CRC-valid frame produced in `out`
+     *   Empty           byte consumed, frame not complete yet
+     *   Checksum        complete frame seen but CRC did not match
+     *   InvalidArgument payload length exceeds kMaxPayload
+     *
+     * The parser never blocks and never allocates.  On any error it
      * resynchronises on the next 0xAA 0x55 sequence.
      */
-    bool feed(std::uint8_t byte, Frame& out) noexcept;
+    common::Error feed(std::uint8_t byte, Frame& out) noexcept;
 
     void reset() noexcept;
 

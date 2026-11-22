@@ -33,4 +33,5 @@ bool comm_has_seen() noexcept;
 TickType_t comm_last_rx_tick() noexcept;
 std::uint32_t comm_rx_bytes() noexcept;
 std::uint32_t comm_frame_errors() noexcept;
+std::uint32_t comm_crc_errors() noexcept;
 std::uint32_t comm_command_drops() noexcept;

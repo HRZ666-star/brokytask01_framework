@@ -16,6 +16,7 @@ struct TelemetrySnapshot {
     std::uint32_t imu_seq;
     std::uint32_t comm_rx;
     std::uint32_t comm_errors;
+    std::uint32_t comm_crc_errors;
     std::uint32_t comm_drops;
     std::uint32_t faults;
     std::int32_t pitch_mdeg;

@@ -31,7 +31,7 @@ void telemetry_task(void* argument) {
         }
 
         LOG_INFO("tele",
-                 "t=%lu imu=%lu p=%ld tgt=%ld cmd=%ld a=%d rx=%lu err=%lu drop=%lu f=0x%02lx",
+                 "t=%lu imu=%lu p=%ld tgt=%ld cmd=%ld a=%d rx=%lu err=%lu cerr=%lu drop=%lu f=0x%02lx",
                  static_cast<unsigned long>(snapshot.seq),
                  static_cast<unsigned long>(snapshot.imu_seq),
                  static_cast<long>(snapshot.pitch_mdeg),
@@ -40,6 +40,7 @@ void telemetry_task(void* argument) {
                  static_cast<int>(snapshot.servo_deg),
                  static_cast<unsigned long>(snapshot.comm_rx),
                  static_cast<unsigned long>(snapshot.comm_errors),
+                 static_cast<unsigned long>(snapshot.comm_crc_errors),
                  static_cast<unsigned long>(snapshot.comm_drops),
                  static_cast<unsigned long>(snapshot.faults));
     }

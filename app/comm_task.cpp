@@ -20,6 +20,7 @@ volatile TickType_t g_last_rx_tick{0U};
 volatile bool g_seen{false};
 volatile std::uint32_t g_rx_bytes{0U};
 volatile std::uint32_t g_frame_errors{0U};
+volatile std::uint32_t g_crc_errors{0U};
 volatile std::uint32_t g_command_drops{0U};
 
 void handle_frame(const modules::Frame& frame) {
@@ -63,8 +64,14 @@ void comm_task(void* argument) {
         }
 
         ++g_rx_bytes;
-        if (g_parser.feed(byte, frame)) {
+
+        const common::Error result = g_parser.feed(byte, frame);
+        if (result == common::Error::Ok) {
             handle_frame(frame);
+        } else if (result == common::Error::Checksum) {
+            ++g_crc_errors;
+        } else if (result == common::Error::InvalidArgument) {
+            ++g_frame_errors;
         }
     }
 }
@@ -119,6 +126,10 @@ std::uint32_t comm_rx_bytes() noexcept {
 
 std::uint32_t comm_frame_errors() noexcept {
     return g_frame_errors;
+}
+
+std::uint32_t comm_crc_errors() noexcept {
+    return g_crc_errors;
 }
 
 std::uint32_t comm_command_drops() noexcept {
