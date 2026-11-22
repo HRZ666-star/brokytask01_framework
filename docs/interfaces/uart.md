@@ -31,9 +31,6 @@ if (err != common::Error::Ok) {
 `write()` 在 `Blocking` 与 `Interrupt` 模式下都走 HAL 阻塞发送，保证
 调用返回时数据已经交给外设；`timeout_ms` 是 HAL 的阻塞超时。
 
-`Dma` 模式下 `write()` 返回 `NotSupported`，不会偷偷退化成阻塞发送。
-DMA 发送需要调用方保证缓冲区生命周期，等 Day 3 再补。
-
 ## 3. 接收
 
 ### 阻塞
@@ -43,8 +40,8 @@ std::uint8_t buffer[64];
 const common::Error err = uart.read({buffer, sizeof(buffer)}, 100U);
 ```
 
-`read()` 只在 `Blocking` 模式可用；其他模式返回 `NotSupported`，因为
-接收由中断/DMA 回调接管。
+`read()` 只在 `Blocking` 模式可用；`Interrupt` 模式返回 `NotSupported`，
+因为接收由中断回调接管。
 
 ### 中断
 
@@ -76,11 +73,11 @@ if (uart.startReceive(on_byte, nullptr) != common::Error::Ok) {
 每字节中断在 115200 下约 11.5k 次/秒，当前用于验证链路；后续协议模块
 会在回调里写入环形缓冲，再在任务里解析，避免在 ISR 做重活。
 
-## 4. DMA
+## 4. 未提供 DMA
 
-`UartMode::Dma` 已出现在接口里，但 `write` / `read` / `startReceive`
-目前都返回 `NotSupported`。F103 的 USART1 需要 DMA1 Channel4/5 和对应
-NVIC 配置，等 Day 3 与环形缓冲一起补；在补完前不会假装支持。
+当前接口只暴露 `Blocking` 与 `Interrupt` 两种模式，不保留 DMA 占位枚举。
+DMA 需要调用方保证缓冲区生命周期，并补 DMA1 Channel4/5、NVIC 和完成回调；
+在实现和测试之前不写进接口，避免“声明了但返回 NotSupported”的空承诺。
 
 ## 5. 模式矩阵
 
@@ -88,7 +85,6 @@ NVIC 配置，等 Day 3 与环形缓冲一起补；在补完前不会假装支�
 |---|---|---|---|
 | `Blocking` | HAL 阻塞 | HAL 阻塞 | 初始化打印、短命令、调试 |
 | `Interrupt` | HAL 阻塞 | 单字节中断 + 回调 | 不定长协议、低延迟命令 |
-| `Dma` | `NotSupported` | `NotSupported` | 预留，Day 3 实现 |
 
 ## 6. 测试镜像
 

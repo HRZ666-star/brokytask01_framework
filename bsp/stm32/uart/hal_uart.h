@@ -31,7 +31,6 @@ public:
     [[nodiscard]] Error startReceive(UartRxCallback callback,
                                      void* context) override;
     [[nodiscard]] Error stopReceive() override;
-    [[nodiscard]] UartMode mode() const noexcept override;
 
     /* Internal hook used by HAL_UART_RxCpltCallback(). */
     static void on_rx_complete(UART_HandleTypeDef* handle);

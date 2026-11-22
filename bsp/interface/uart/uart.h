@@ -12,7 +12,6 @@ using common::Error;
 enum class UartMode : std::uint8_t {
     Blocking,
     Interrupt,
-    Dma,
 };
 
 struct UartConfig {
@@ -39,7 +38,6 @@ public:
     [[nodiscard]] virtual Error startReceive(UartRxCallback callback,
                                              void* context) = 0;
     [[nodiscard]] virtual Error stopReceive() = 0;
-    [[nodiscard]] virtual UartMode mode() const noexcept = 0;
 };
 
 }  // namespace bsp

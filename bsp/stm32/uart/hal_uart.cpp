@@ -62,11 +62,6 @@ Error HalUart::write(ConstByteSpan data, std::uint32_t timeout_ms) {
     if (!initialized_) {
         return Error::NotInitialized;
     }
-    if (mode_ == UartMode::Dma) {
-        // DMA transmit needs a caller-owned buffer and a completion callback;
-        // do not silently fall back to a blocking transfer.
-        return Error::NotSupported;
-    }
     if (data.data == nullptr && data.size != 0U) {
         return Error::InvalidArgument;
     }
@@ -149,8 +144,6 @@ Error HalUart::stopReceive() {
     const HAL_StatusTypeDef status = HAL_UART_AbortReceive_IT(&handle_);
     return map_hal_status(status);
 }
-
-UartMode HalUart::mode() const noexcept { return mode_; }
 
 void HalUart::on_rx_complete(UART_HandleTypeDef* handle) {
     HalUart* self = active_;

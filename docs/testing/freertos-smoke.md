@@ -92,7 +92,7 @@ cmake --build build
 
 1. 本地提交烟测代码，建议 tag `v0.2-freertos-smoke`。
 2. 回到 Day 2：`bsp/interface` 的 `Error`/`Result`/`ByteSpan`/`IUart`。
-3. 后面写 UART 中断/DMA 时，所有 ISR 都要使用 `FromISR` API，并且中断优先级不能高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`（当前是 5）。
+3. 后面写 UART 中断接收时，所有 ISR 都要使用 `FromISR` API，并且中断优先级不能高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`（当前是 5）。
 
 ## 7. 常见问题
 

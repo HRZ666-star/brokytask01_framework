@@ -105,7 +105,7 @@ rx count=1 last=0x03
 - **阻塞发送**；
 - **中断接收**。
 
-DMA 发送/接收仍未实现，`UartMode::Dma` 相关接口仍返回 `NotSupported`，文档中不能写成“三种模式全部支持”。
+DMA 发送/接收未提供；当前接口只保留 `Blocking` 与 `Interrupt`，文档中不能写成“三种模式全部支持”。
 
 ## 7. 已知限制
 
