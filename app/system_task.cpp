@@ -39,7 +39,7 @@ constexpr UBaseType_t kCommandQueueDepth = 4U;
 }  // namespace
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
     bsp::IUart& uart = board_uart();
 
     /*
@@ -48,12 +48,15 @@ int main(void) {
      * interrupt receive path for commands, so switch the same handle to
      * Interrupt mode before the logger and the receiver take ownership.
      */
-    if (uart.init({115200U, bsp::UartMode::Interrupt}) != common::Error::Ok) {
-        Error_Handler();
+    const common::Error uart_error =
+        uart.init({115200U, bsp::UartMode::Interrupt});
+    if (uart_error != common::Error::Ok) {
+        fatal_error(uart_error, __FILE__, __LINE__);
     }
 
-    if (modules::logger().init(uart) != common::Error::Ok) {
-        Error_Handler();
+    const common::Error logger_error = modules::logger().init(uart);
+    if (logger_error != common::Error::Ok) {
+        fatal_error(logger_error, __FILE__, __LINE__);
     }
 
     QueueHandle_t imu_queue = imu_source_start(6U, 256U);
@@ -68,28 +71,30 @@ int main(void) {
     if (imu_queue == nullptr || command_queue == nullptr ||
         telemetry_queue == nullptr || safety_events == nullptr ||
         rx_stream == nullptr) {
-        Error_Handler();
+        fatal_error(common::Error::Hardware, __FILE__, __LINE__);
     }
 
-    if (uart.startReceive(comm_uart_rx_isr, rx_stream) != common::Error::Ok) {
-        Error_Handler();
+    const common::Error rx_error =
+        uart.startReceive(comm_uart_rx_isr, rx_stream);
+    if (rx_error != common::Error::Ok) {
+        fatal_error(rx_error, __FILE__, __LINE__);
     }
 
     if (control_loop_start(imu_queue, command_queue, safety_events,
                            telemetry_queue) == nullptr) {
-        Error_Handler();
+        fatal_error(common::Error::Hardware, __FILE__, __LINE__);
     }
 
     if (comm_task_start(rx_stream, command_queue, safety_events) == nullptr) {
-        Error_Handler();
+        fatal_error(common::Error::Hardware, __FILE__, __LINE__);
     }
 
     if (safety_task_start(safety_events) == nullptr) {
-        Error_Handler();
+        fatal_error(common::Error::Hardware, __FILE__, __LINE__);
     }
 
     if (telemetry_task_start(telemetry_queue, safety_events) == nullptr) {
-        Error_Handler();
+        fatal_error(common::Error::Hardware, __FILE__, __LINE__);
     }
 
     LOG_INFO("boot", "system six-task demo start, imu=1kHz ctl=500Hz");
@@ -106,5 +111,5 @@ int main(void) {
 
     vTaskStartScheduler();
 
-    Error_Handler();
+    fatal_error(common::Error::Hardware, __FILE__, __LINE__);
 }

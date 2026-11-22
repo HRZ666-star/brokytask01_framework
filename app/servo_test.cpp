@@ -16,7 +16,7 @@
 #include <cstdio>
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
 
     const common::Error pwm_error =
         board_pwm().init({50U, 500U, 2500U, 72000000U});

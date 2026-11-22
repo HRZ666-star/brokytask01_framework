@@ -19,7 +19,7 @@ void send_line(bsp::IUart& uart, const char* text, std::size_t size) {
 }  // namespace
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
     bsp::IUart& uart = board_uart();
 
     char line[96];

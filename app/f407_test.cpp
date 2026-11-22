@@ -2,7 +2,7 @@
 #include <cstdio>
 
 int main() {
-    board_init();
+    BOARD_INIT();
 
     std::printf("f407 port: boot, sysclk=%lu\r\n",
                 static_cast<unsigned long>(SystemCoreClock));

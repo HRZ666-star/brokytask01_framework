@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/error/error.h"
 #include "stm32f4xx_hal.h"
 
 #ifdef __cplusplus
@@ -13,12 +14,27 @@ extern "C" {
 extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef  htim2;
 
-void board_init(void);
+common::Error board_init(void);
 void board_led_write(uint8_t on);
 void board_led_toggle(void);
 uint32_t board_timer_ticks(void);
 void Error_Handler(void);
 
 #ifdef __cplusplus
+}  /* extern "C" */
+#endif
+
+#ifdef __cplusplus
+[[noreturn]] void fatal_error(common::Error error, const char* file, int line);
+
+inline void board_init_checked(const char* file, int line) {
+    const common::Error error = board_init();
+    if (error != common::Error::Ok) {
+        fatal_error(error, file, line);
+    }
 }
+
+#define BOARD_INIT() board_init_checked(__FILE__, __LINE__)
+#else
+#define BOARD_INIT() board_init()
 #endif

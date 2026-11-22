@@ -64,7 +64,7 @@ void flood_task(void* argument) {
 }  // namespace
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
     bsp::IUart& uart = board_uart();
 
     if (modules::logger().init(uart) != common::Error::Ok) {

@@ -27,7 +27,7 @@ void send_line(bsp::IUart& uart, const char* text, std::size_t size) {
 }  // namespace
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
     bsp::IUart& uart = board_uart();
 
     if (uart.init({115200U, bsp::UartMode::Interrupt}) != common::Error::Ok) {

@@ -36,7 +36,7 @@ void print_frame(const char* tag, const bsp::CanFrame& frame) {
 }  // namespace
 
 int main() {
-    board_init();
+    BOARD_INIT();
 
     bsp::ICan& can = board_can();
     if (can.init({500000U, bsp::CanMode::Loopback}) != common::Error::Ok) {

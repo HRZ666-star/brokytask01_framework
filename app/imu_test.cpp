@@ -45,7 +45,7 @@ void print_data(const modules::Mpu6050Data& data) {
 }  // namespace
 
 int main() {
-    board_init();
+    BOARD_INIT();
 
     bsp::II2c& i2c = board_i2c();
     if (i2c.init({400000U, bsp::I2cMode::Blocking}) != common::Error::Ok) {

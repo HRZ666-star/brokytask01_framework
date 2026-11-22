@@ -33,7 +33,7 @@ void blink_task(void* argument) {
 }  // namespace
 
 int main(void) {
-    board_init();
+    BOARD_INIT();
 
     std::printf("freertos smoke: boot, sysclk=%lu\r\n",
                 static_cast<unsigned long>(HAL_RCC_GetHCLKFreq()));

@@ -8,29 +8,66 @@ TIM_HandleTypeDef  htim2;
 static bsp::HalUart g_uart{huart1};
 static volatile uint32_t g_timer_ticks = 0;
 
-static void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_TIM2_Init(void);
+extern "C" {
+volatile uint32_t g_fatal_error_code = 0U;
+volatile const char* g_fatal_file = nullptr;
+volatile uint32_t g_fatal_line = 0U;
+}
 
-extern "C" void board_init(void) {
-    HAL_Init();
-    SystemClock_Config();
-    HAL_InitTick(TICK_INT_PRIORITY);
-    MX_GPIO_Init();
-    MX_USART1_UART_Init();
-    MX_TIM2_Init();
+static common::Error SystemClock_Config(void);
+static common::Error MX_GPIO_Init(void);
+static common::Error MX_USART1_UART_Init(void);
+static common::Error MX_TIM2_Init(void);
 
-    if (g_uart.init({115200U, bsp::UartMode::Blocking}) != common::Error::Ok) {
-        Error_Handler();
+static common::Error hal_to_error(HAL_StatusTypeDef status) {
+    switch (status) {
+        case HAL_OK:      return common::Error::Ok;
+        case HAL_BUSY:    return common::Error::Busy;
+        case HAL_TIMEOUT: return common::Error::Timeout;
+        case HAL_ERROR:
+        default:          return common::Error::Hardware;
     }
+}
+
+extern "C" common::Error board_init(void) {
+    common::Error error = hal_to_error(HAL_Init());
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    error = SystemClock_Config();
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    error = hal_to_error(HAL_InitTick(TICK_INT_PRIORITY));
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    error = MX_GPIO_Init();
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    error = MX_USART1_UART_Init();
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    error = MX_TIM2_Init();
+    if (error != common::Error::Ok) {
+        return error;
+    }
+
+    return g_uart.init({115200U, bsp::UartMode::Blocking});
 }
 
 bsp::IUart& board_uart() { return g_uart; }
 
 uint32_t board_timer_ticks(void) { return g_timer_ticks; }
 
-static void SystemClock_Config(void) {
+static common::Error SystemClock_Config(void) {
     RCC_OscInitTypeDef osc = {};
     RCC_ClkInitTypeDef clk = {};
 
@@ -45,8 +82,9 @@ static void SystemClock_Config(void) {
     osc.PLL.PLLN       = 336U;    // 1 MHz * 336 = 336 MHz
     osc.PLL.PLLP       = RCC_PLLP_DIV2; // 168 MHz
     osc.PLL.PLLQ       = 7U;      // 48 MHz USB/SDIO
-    if (HAL_RCC_OscConfig(&osc) != HAL_OK) {
-        Error_Handler();
+    common::Error error = hal_to_error(HAL_RCC_OscConfig(&osc));
+    if (error != common::Error::Ok) {
+        return error;
     }
 
     clk.ClockType      = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
@@ -55,12 +93,10 @@ static void SystemClock_Config(void) {
     clk.AHBCLKDivider  = RCC_SYSCLK_DIV1;
     clk.APB1CLKDivider = RCC_HCLK_DIV4;   // 42 MHz
     clk.APB2CLKDivider = RCC_HCLK_DIV2;   // 84 MHz
-    if (HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_5) != HAL_OK) {
-        Error_Handler();
-    }
+    return hal_to_error(HAL_RCC_ClockConfig(&clk, FLASH_LATENCY_5));
 }
 
-static void MX_GPIO_Init(void) {
+static common::Error MX_GPIO_Init(void) {
     GPIO_InitTypeDef gpio = {};
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -72,9 +108,10 @@ static void MX_GPIO_Init(void) {
     HAL_GPIO_Init(LED_GPIO_Port, &gpio);
 
     HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET); // active low, off
+    return common::Error::Ok;
 }
 
-static void MX_USART1_UART_Init(void) {
+static common::Error MX_USART1_UART_Init(void) {
     GPIO_InitTypeDef gpio = {};
 
     __HAL_RCC_USART1_CLK_ENABLE();
@@ -91,9 +128,10 @@ static void MX_USART1_UART_Init(void) {
 
     HAL_NVIC_SetPriority(USART1_IRQn, 6, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
+    return common::Error::Ok;
 }
 
-static void MX_TIM2_Init(void) {
+static common::Error MX_TIM2_Init(void) {
     __HAL_RCC_TIM2_CLK_ENABLE();
 
     htim2.Instance               = TIM2;
@@ -102,15 +140,14 @@ static void MX_TIM2_Init(void) {
     htim2.Init.Period            = 1000U - 1U; // 1 kHz
     htim2.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
-        Error_Handler();
+    common::Error error = hal_to_error(HAL_TIM_Base_Init(&htim2));
+    if (error != common::Error::Ok) {
+        return error;
     }
 
     HAL_NVIC_SetPriority(TIM2_IRQn, 6, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
-    if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
-        Error_Handler();
-    }
+    return hal_to_error(HAL_TIM_Base_Start_IT(&htim2));
 }
 
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
@@ -138,8 +175,16 @@ extern "C" void board_led_toggle(void) {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 }
 
-extern "C" void Error_Handler(void) {
+[[noreturn]] void fatal_error(common::Error error, const char* file, int line) {
+    g_fatal_error_code = static_cast<std::uint32_t>(error);
+    g_fatal_file = file;
+    g_fatal_line = static_cast<std::uint32_t>(line);
     __disable_irq();
     for (;;) {
+        __NOP();
     }
+}
+
+extern "C" void Error_Handler(void) {
+    fatal_error(common::Error::Unknown, __FILE__, __LINE__);
 }
