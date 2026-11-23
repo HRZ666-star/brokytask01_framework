@@ -24,6 +24,7 @@ private:
     std::uint32_t channel_;
     PwmConfig config_{};
     std::uint16_t pulse_us_{0U};
+    bool initialized_{false};
 };
 
 }  // namespace bsp

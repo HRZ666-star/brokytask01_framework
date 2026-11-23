@@ -37,7 +37,7 @@ private:
     CanMode mode_ = CanMode::Normal;
     bool initialized_ = false;
     bool started_ = false;
-    bool receiving_ = false;
+    volatile bool receiving_ = false;
     CanRxCallback callback_ = nullptr;
     void* context_ = nullptr;
 

@@ -45,6 +45,8 @@ common::Error HalPwm::init(const PwmConfig& config) {
         return common::Error::InvalidArgument;
     }
 
+    initialized_ = false;
+
     timer_.Init.Prescaler = ticks_per_us - 1U;
     timer_.Init.CounterMode = TIM_COUNTERMODE_UP;
     timer_.Init.Period = period_ticks - 1U;
@@ -68,12 +70,22 @@ common::Error HalPwm::init(const PwmConfig& config) {
         return channel_error;
     }
 
+    const common::Error start_error =
+        map_hal_status(HAL_TIM_PWM_Start(&timer_, channel_));
+    if (start_error != common::Error::Ok) {
+        return start_error;
+    }
+
     config_ = config;
     pulse_us_ = config.min_pulse_us;
-    return map_hal_status(HAL_TIM_PWM_Start(&timer_, channel_));
+    initialized_ = true;
+    return common::Error::Ok;
 }
 
 common::Error HalPwm::setPulseUs(std::uint16_t pulse_us) {
+    if (!initialized_) {
+        return common::Error::NotInitialized;
+    }
     if (pulse_us < config_.min_pulse_us || pulse_us > config_.max_pulse_us) {
         return common::Error::InvalidArgument;
     }

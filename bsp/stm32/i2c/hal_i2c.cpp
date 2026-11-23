@@ -93,10 +93,13 @@ Error HalI2c::write(std::uint8_t address,
         return Error::Ok;
     }
 
-    return map_hal_status(HAL_I2C_Master_Transmit(
+    busy_ = true;
+    const HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(
         &handle_, static_cast<std::uint16_t>(address << 1U),
         const_cast<std::uint8_t*>(data.data), static_cast<std::uint16_t>(data.size),
-        timeout_ms));
+        timeout_ms);
+    busy_ = false;
+    return map_hal_status(status);
 }
 
 Error HalI2c::read(std::uint8_t address,
@@ -115,9 +118,12 @@ Error HalI2c::read(std::uint8_t address,
         return Error::Ok;
     }
 
-    return map_hal_status(HAL_I2C_Master_Receive(
+    busy_ = true;
+    const HAL_StatusTypeDef status = HAL_I2C_Master_Receive(
         &handle_, static_cast<std::uint16_t>(address << 1U), out.data,
-        static_cast<std::uint16_t>(out.size), timeout_ms));
+        static_cast<std::uint16_t>(out.size), timeout_ms);
+    busy_ = false;
+    return map_hal_status(status);
 }
 
 Error HalI2c::memWrite(std::uint8_t address,
@@ -137,10 +143,13 @@ Error HalI2c::memWrite(std::uint8_t address,
         return Error::Ok;
     }
 
-    return map_hal_status(HAL_I2C_Mem_Write(
+    busy_ = true;
+    const HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
         &handle_, static_cast<std::uint16_t>(address << 1U), mem_address,
         I2C_MEMADD_SIZE_8BIT, const_cast<std::uint8_t*>(data.data),
-        static_cast<std::uint16_t>(data.size), timeout_ms));
+        static_cast<std::uint16_t>(data.size), timeout_ms);
+    busy_ = false;
+    return map_hal_status(status);
 }
 
 Error HalI2c::memRead(std::uint8_t address,
@@ -160,10 +169,13 @@ Error HalI2c::memRead(std::uint8_t address,
         return Error::Ok;
     }
 
-    return map_hal_status(HAL_I2C_Mem_Read(
+    busy_ = true;
+    const HAL_StatusTypeDef status = HAL_I2C_Mem_Read(
         &handle_, static_cast<std::uint16_t>(address << 1U), mem_address,
         I2C_MEMADD_SIZE_8BIT, out.data, static_cast<std::uint16_t>(out.size),
-        timeout_ms));
+        timeout_ms);
+    busy_ = false;
+    return map_hal_status(status);
 }
 
 Error HalI2c::memWriteAsync(std::uint8_t address,

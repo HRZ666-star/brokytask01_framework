@@ -42,7 +42,7 @@ private:
     void* callback_context_{nullptr};
     std::uint8_t rx_byte_{0};
     bool initialized_{false};
-    bool receiving_{false};
+    volatile bool receiving_{false};
     static HalUart* active_;
 };
 

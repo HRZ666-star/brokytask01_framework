@@ -60,7 +60,7 @@ private:
     I2C_HandleTypeDef& handle_;
     I2cMode mode_ = I2cMode::Blocking;
     bool initialized_ = false;
-    bool busy_ = false;
+    volatile bool busy_ = false;
     I2cCallback callback_ = nullptr;
     void* context_ = nullptr;
 
