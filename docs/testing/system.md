@@ -16,7 +16,7 @@
 | 调试器 | J-Link V9，SWD 1000 kHz |
 | 串口 | CH340，COM6，115200 8N1 |
 | 固件 | `build-system/firmware.elf` |
-| 构建 | `text 33236, data 128, bss 17268` |
+| 构建 | `text 33336, data 128, bss 17276` |
 | 日期 | 2026-11-22 |
 
 ## 帧格式
@@ -90,5 +90,6 @@ tgt 一直为 10000
 ## 已知限制
 
 - `safety` 的 comm 超时是 500 ms；停止发帧后会置位 `f=0x04`，且故障锁存，需要复位清除。测试时应保持发帧间隔小于 500 ms。
+- comm 超时已进入 control 的停机条件：`kSafetyCommTimeout` 置位后，目标、输出、舵机都回 0，不会继续执行最后一条命令。可用“发一帧 → 停发 1 s → 看 `tele` 的 `tgt/cmd/a` 是否归零”验证。
 - telemetry 里的 `p` 来自合成 IMU 斜坡，不是真实姿态；本测试只验证命令链路。
 - CRC 错误只累加 `cerr`，不做逐帧日志，避免噪声帧刷屏。
