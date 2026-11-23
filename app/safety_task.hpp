@@ -16,6 +16,6 @@ constexpr EventBits_t kSafetyImuTimeout = (1U << 0U);
 constexpr EventBits_t kSafetyControlTimeout = (1U << 1U);
 constexpr EventBits_t kSafetyCommTimeout = (1U << 2U);
 constexpr EventBits_t kSafetyCritical =
-    kSafetyImuTimeout | kSafetyControlTimeout;
+    kSafetyImuTimeout | kSafetyControlTimeout | kSafetyCommTimeout;
 
 TaskHandle_t safety_task_start(EventGroupHandle_t events);

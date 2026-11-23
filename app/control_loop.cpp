@@ -126,10 +126,14 @@ void control_task(void* argument) {
                 ? xEventGroupGetBits(context->safety_events)
                 : static_cast<EventBits_t>(0U);
 
-        const bool safe =
-            (faults & (kSafetyImuTimeout | kSafetyControlTimeout)) != 0U;
+        /*
+         * Any critical fault must stop the output.  Comm loss is included:
+         * after the operator link disappears the gimbal must not keep
+         * executing the last commanded target.
+         */
+        const bool faulted = (faults & kSafetyCritical) != 0U;
 
-        if (safe) {
+        if (faulted) {
             target_mdeg = 0;
             command = 0;
             servo_angle = 0;
