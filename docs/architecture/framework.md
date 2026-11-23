@@ -1,5 +1,8 @@
 # 框架设计
 
+> **通俗说**：`app` 是“用电器”，`modules` 是“零件”，`bsp/interface` 是“插座标准”，`bsp/stm32` 是“插头”，`board` 是“这台机器的接线图”。  
+> 换芯片主要换插头和接线图，不重写用电器。
+
 ## 1. 分层
 
 ```mermaid
@@ -187,4 +190,4 @@ g_fatal_line
 
 - 完成：分层、CMake target、`check_layering`、Error、UART、CAN Loopback、I2C+MPU6500、PWM、FreeRTOS 六任务、F407 UART+TIM2、命令帧+CRC。
 - 部分完成：SG90 实际转动未通过；CAN 外部总线未测；F407 只移植 UART+TIM2。
-- 未完成：单元测试、HIL、UART DMA、PA7 第二路 PWM、接口膨胀清理、最终视频/tag。
+- 未完成：单元测试、HIL、UART DMA、PA7 第二路 PWM。

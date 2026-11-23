@@ -16,7 +16,7 @@
 | 调试器 | J-Link V9，SWD 1000 kHz |
 | 串口 | CH340，COM6，115200 8N1 |
 | 固件 | `build-system/firmware.elf` |
-| 构建 | `text 33336, data 128, bss 17276` |
+| 构建 | `text 33436, data 128, bss 17276`（P0 加固后） |
 | 日期 | 2026-11-22 |
 
 ## 帧格式

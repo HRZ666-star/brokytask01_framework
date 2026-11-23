@@ -88,11 +88,9 @@ cmake --build build
 
 然后用 Ozone 打开 `build/firmware.elf` 烧录即可。
 
-## 6. 通过后做什么
+## 6. 结论
 
-1. 本地提交烟测代码，建议 tag `v0.2-freertos-smoke`。
-2. 回到 Day 2：`bsp/interface` 的 `Error`/`Result`/`ByteSpan`/`IUart`。
-3. 后面写 UART 中断接收时，所有 ISR 都要使用 `FromISR` API，并且中断优先级不能高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`（当前是 5）。
+调度器启动、1 kHz tick、任务闪灯均正常；ISR 使用 `FromISR` API，中断优先级不高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`（当前 5）。
 
 ## 7. 常见问题
 

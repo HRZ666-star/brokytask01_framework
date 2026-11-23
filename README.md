@@ -2,6 +2,12 @@
 
 基于 STM32 的嵌入式框架，按 **BSP / Module / Application** 分层，使用现代 C++（C++17）和 FreeRTOS，用于任务 01（Frameworks）。
 
+> **第一次看，先看第 1 节“当前状态”，再按第 8 节文档索引选读。**
+
+> **我的开发方式**：AI 帮我出初稿，我负责架构约束、接口取舍、代码审查、硬件测试和文档验收。  
+> 详见 [开发方式与贡献说明](docs/development/ai-assisted.md)；  
+> 代码上几个有技巧的改动见 [实现笔记](docs/development/implementation-notes.md)。
+
 ## 1. 当前状态
 
 | 能力 | 状态 | 说明 |
@@ -15,6 +21,7 @@
 | FreeRTOS 六任务 | 完成 | imu / control / comm / safety / telemetry / logger |
 | 命令帧 + CRC | 完成 | 合法帧改变目标，坏 CRC 计数且不改目标 |
 | F407 移植 | 完成（最小） | UART + TIM2，168 MHz，串口实测通过 |
+| 初始化错误返回 / 安全加固 | 完成 | `board_init()` 返回 `Error`；PWM 初始化保护；通信超时进入停机 |
 | 单元测试 | 未做 | `tests/unit` 目前为空 |
 
 ## 2. 目录
@@ -160,6 +167,8 @@ g_fatal_line
 - [F103→F407 移植](docs/porting/f103-to-f407.md)
 - [系统测试](docs/testing/system.md)
 - [BOM](docs/hardware/bom.md)
+- [开发方式与贡献说明](docs/development/ai-assisted.md)
+- [实现笔记：几个有技巧的改动](docs/development/implementation-notes.md)
 
 ## 9. 已知限制
 
@@ -168,7 +177,10 @@ g_fatal_line
 - MPU 模块实际为 MPU6500（0x70），不是 MPU6050（0x68）；驱动已兼容 0x68/0x70/0x71。
 - UART 没有 DMA；当前是阻塞发送 + 中断接收，满足任务 01 的“至少两种方式”。
 - F407 只移植了 UART + TIM2；I2C/CAN 适配器仍是 F103-only。
-- 无单元测试；`tests/unit` 为空。
+- 适配器目前是单实例（`static active_`）；多 UART/I2C 需要改成 handle → instance 注册表。
+- control 仍是 `vTaskDelayUntil` 驱动，不是 TIM 触发；未测 CPU 占用和最坏执行时间。
+- 接口仍有预留/未使用项（如 `Result<T>`），`control_loop` 还 include 了 `comm_task.hpp`，属于已知耦合。
+- 无单元测试、HIL 和 CI；`tests/unit` 为空，测试以手工记录为主。
 - `fatal_error()` 不打印日志，只保存错误码/位置，适合 Ozone 调试。
 
 ## 10. 第三方
