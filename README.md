@@ -200,3 +200,10 @@ B 站公开链接：
 - 分享短链：https://b23.tv/vcKvNFO
 
 视频时长约 56 秒，内容包括：片头、六任务运行、命令帧与 CRC、CAN Loopback、MPU6500 三轴、F407 UART + TIM2、片尾。
+
+## 12. AI 对话记录
+
+完整对话记录（用户原话、助手回复、工具调用摘要）见：
+
+- [`docs/development/ai-conversation.md`](docs/development/ai-conversation.md)
+- 开发方式与贡献说明：[`docs/development/ai-assisted.md`](docs/development/ai-assisted.md)
