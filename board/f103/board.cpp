@@ -19,6 +19,7 @@ static bsp::HalUart g_uart{huart1};
 static bsp::HalCan  g_can{hcan1};
 static bsp::HalI2c  g_i2c{hi2c1};
 static bsp::HalPwm  g_pwm{htim3, TIM_CHANNEL_1};
+static bsp::HalPwm  g_pwm_pitch{htim3, TIM_CHANNEL_2};
 
 extern "C" {
 volatile uint32_t g_fatal_error_code = 0U;
@@ -92,6 +93,7 @@ bsp::IUart& board_uart() { return g_uart; }
 bsp::II2c& board_i2c() { return g_i2c; }
 bsp::ICan& board_can() { return g_can; }
 bsp::IPwm& board_pwm() { return g_pwm; }
+bsp::IPwm& board_pwm_pitch() { return g_pwm_pitch; }
 
 static common::Error SystemClock_Config(void) {
     RCC_OscInitTypeDef osc = {};
@@ -181,8 +183,9 @@ uint32_t board_micros(void) {
 }
 
 /*
- * GPIO/clock for the servo signal (PA6 / TIM3_CH1).  The PWM duration and
- * channel configuration belong to HalPwm::init(), which owns the 1 us tick.
+ * GPIO/clock for the servo signals (PA6 / TIM3_CH1, PA7 / TIM3_CH2).
+ * The PWM duration and channel configuration belong to HalPwm::init(),
+ * which owns the 1 us tick.
  */
 static common::Error MX_TIM3_Init(void) {
     GPIO_InitTypeDef gpio = {};
@@ -190,7 +193,7 @@ static common::Error MX_TIM3_Init(void) {
     __HAL_RCC_TIM3_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    gpio.Pin = GPIO_PIN_6;
+    gpio.Pin = GPIO_PIN_6 | GPIO_PIN_7;
     gpio.Mode = GPIO_MODE_AF_PP;
     gpio.Pull = GPIO_NOPULL;
     gpio.Speed = GPIO_SPEED_FREQ_HIGH;
