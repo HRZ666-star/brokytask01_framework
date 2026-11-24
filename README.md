@@ -191,3 +191,12 @@ g_fatal_line
 - FreeRTOS 10.3.1（MIT）
 
 见 `THIRD_PARTY.md`。
+
+## 11. 演示视频
+
+B 站公开链接：
+
+- 规范链接：https://www.bilibili.com/video/BV1HmyZzaEcV/
+- 分享短链：https://b23.tv/vcKvNFO
+
+视频时长约 56 秒，内容包括：片头、六任务运行、命令帧与 CRC、CAN Loopback、MPU6500 三轴、F407 UART + TIM2、片尾。
